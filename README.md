@@ -48,7 +48,7 @@ is flagged `[UNVERIFIED]` until then.
 
 | Phase | Content | Status |
 |---|---|---|
-| 0 | Spikes: Open API reachability, v1 namespace, one Block create+undo, headless-or-not | Artifacts ready — **awaiting operator run + typed status** ([`phase0/RUNBOOK.md`](phase0/RUNBOOK.md)) |
+| 0 | Spikes: Open API reachability, v1 namespace, one Block create+undo, headless-or-not | **Passed on Cameo machine** — operator confirmed ALL CHECKS PASSED + Ctrl+Z undo worked (2026-07-22); headless spike optional/skipped ([`phase0/RUNBOOK.md`](phase0/RUNBOOK.md)) |
 | 1 | Walking skeleton: A1→A2→A3→A4→A5 end-to-end | Artifacts written (subsumed by Phase 2 set) — awaiting checkpoint |
 | 2 | Full contract: extended A1, derived A2/A3, anti-drift gate, negative tests, generator | **Artifacts written & Python side tested** — awaiting in-Cameo checkpoint |
 | 3 | Hardening: view/diagram generation, deletion of removed elements, dry-run diff | Not started |
