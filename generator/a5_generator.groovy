@@ -198,9 +198,25 @@ try {
             def el = findBySpecId(e.id)
             if (el == null) {
                 el = createByMetaclass(e.base_metaclass)
-                attach(el, pkg)
-                sh.addStereotype(el, st)
-                setTag(el, st, plan.spec_id_tag, e.id)
+                // From here the element exists in the session. If it cannot be
+                // stereotyped AND given a readable identity tag it becomes an
+                // unidentifiable orphan that the NEXT run duplicates (and the
+                // leftover scan never reports, since that scan only sees
+                // stereotyped elements). So any failure below aborts the whole
+                // run — the symmetric write-side of the findBySpecId read guard.
+                try { attach(el, pkg); sh.addStereotype(el, st) }
+                catch (Throwable t) {
+                    throw new IllegalStateException('MC_CREATE: could not attach/stereotype new element ' + e.id +
+                        ' «' + e.stereotype + '» (' + t + ') — aborting so a half-built, unidentifiable element is never committed.')
+                }
+                boolean idOk = setTag(el, st, plan.spec_id_tag, e.id)
+                def back = null
+                if (idOk) { try { back = sh.getStereotypePropertyFirst(el, st, plan.spec_id_tag) } catch (Throwable t) { idOk = false } }
+                if (!idOk || back == null || String.valueOf(back) != String.valueOf(e.id)) {
+                    throw new IllegalStateException('MC_CREATE: identity tag ' + plan.spec_id_tag + '=' + e.id +
+                        ' did not persist on the new element (read back ' + back + ') — aborting before the next run duplicates every element. ' +
+                        'Check the Phase 0 S3 introspection for the real setStereotypePropertyValue/getStereotypePropertyFirst signatures.')
+                }
                 created++
                 line('created  ' + e.id + '  «' + e.stereotype + '» ' + e.name)
             } else {
@@ -221,7 +237,7 @@ try {
         } catch (Throwable t) {
             // identity-read failures must abort the run (see findBySpecId),
             // not degrade to a per-element problem line
-            if (t instanceof IllegalStateException && t.getMessage()?.startsWith('MC_IDENTITY')) throw t
+            if (t instanceof IllegalStateException && (t.getMessage()?.startsWith('MC_IDENTITY') || t.getMessage()?.startsWith('MC_CREATE'))) throw t
             problems << ('element ' + e.id + ': ' + t.toString())
         }
     }

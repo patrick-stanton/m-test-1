@@ -4,7 +4,7 @@
   "metamodel_version": "0.2.0",
   "outputs": {
     "a3_schema.json": "d231c3253d204acc129e9104cbe2a098e95baf4c5da2e958afec8f35a740f8dc",
-    "a2_profile_builder.groovy": "7fc274181851b88b8762c109a4fffdf7637472eff3dbd7334c6406f5ae3cbd22"
+    "a2_profile_builder.groovy": "8e1bf33402ed0edaa00604e854f7981873a630caaaa2397ebcc94d6ab6e72a86"
   },
   "note": "GENERATED \u2014 never hand-edit files in derived/. Re-run: python tools/pipeline.py derive"
 }

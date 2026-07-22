@@ -186,10 +186,13 @@ if (!fatal) {
                 try {
                     stereo = sh.createStereotype(profilePkg, st.name, mcList)
                 } catch (Throwable t) {
-                    stereo = factory.createStereotypeInstance()
-                    stereo.setName(st.name)
-                    attach(stereo, profilePkg)
-                    result('WARN', 'STEREO ' + st.name, 'createStereotype helper failed (' + t.getClass().getSimpleName() + '); created bare stereotype WITHOUT metaclass extension — must be fixed before generation')
+                    // A bare stereotype (no metaclass extension) is one A5 cannot
+                    // apply — building it and reporting success would send the
+                    // operator to save an unusable profile. Fail wholesale, per
+                    // this file's own contract, so the fix happens now not at A5.
+                    throw new IllegalStateException('createStereotype helper failed (' + t.getClass().getSimpleName() + ': ' + t.getMessage() +
+                        ') — refusing to build a bare stereotype without a metaclass extension. ' +
+                        'Check the Phase 0 spike S3 introspection for the real StereotypesHelper.createStereotype signature.')
                 }
                 if (mc == null && !(st.metaclass in ['Class'])) {
                     result('WARN', 'STEREO ' + st.name, 'metaclass ' + st.metaclass + ' not resolved from candidates — extension missing')
