@@ -1,0 +1,4 @@
+# NEGATIVE TEST: 'FluxCapacitor' is not a declared A1 type — must be REJECTED.
+spec: {name: "neg unknown type", metamodel_version: "0.2.0"}
+elements:
+  - {id: X1, type: FluxCapacitor, name: "Not in the metamodel"}

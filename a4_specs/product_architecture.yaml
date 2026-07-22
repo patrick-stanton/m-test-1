@@ -1,0 +1,291 @@
+# =============================================================================
+# A4 — Product architecture spec (Phase 2 demonstration content)
+# =============================================================================
+# Content is drawn strictly from docs/Project_Context_and_Decisions.md (the
+# locked decisions), NOT invented: it describes Aspect 1 — the in-Cameo
+# model-manipulation product — as the modeled system. At Phase 4 this file is
+# extended/replaced with full PRODUCT_FUNCTION detail, which must be requested
+# from the user, never made up.
+#
+# Validated by derived/a3_schema.json (derived from A1 — run
+# `python tools/pipeline.py all a4_specs/product_architecture.yaml`).
+# =============================================================================
+spec:
+  name: "MaC Product Architecture"
+  metamodel_version: "0.2.0"
+  description: "SysML 1.7 description of the in-Cameo model-manipulation product (Aspect 1), per the locked decisions."
+
+elements:
+  # ---------------- B1 — Stakeholder Needs ----------------
+  - id: N1
+    type: StakeholderNeed
+    name: "Build and maintain models from text and GUI"
+    description: "Users need to build, maintain, refactor, inspect, export from, and delete data in SysML models."
+    tags: {stakeholder: "Systems engineering teams", priority: must}
+  - id: N2
+    type: StakeholderNeed
+    name: "AI edits must be individually revertible"
+    tags: {stakeholder: "Model owners", priority: must}
+  - id: N3
+    type: StakeholderNeed
+    name: "Data stays inside the accredited boundary (CUI ceiling)"
+    tags: {stakeholder: "Security officers", priority: must}
+  - id: N4
+    type: StakeholderNeed
+    name: "Support both SysML 1.7 and SysML 2 models"
+    tags: {stakeholder: "Systems engineering teams", priority: must}
+  - id: N5
+    type: StakeholderNeed
+    name: "Scale to teams of about 200 users"
+    tags: {stakeholder: "Program management", priority: should}
+
+  # ---------------- B2 — Use Cases ----------------
+  - id: UC1
+    type: ProductUseCase
+    name: "Build model from a text spec"
+    tags: {primary_actor: "Systems Engineer"}
+    relationships:
+      - {kind: dependency, target: ACT_SE}
+  - id: UC2
+    type: ProductUseCase
+    name: "Ask what an element is"
+    description: "Conversational inspection of any model element."
+    tags: {primary_actor: "Systems Engineer"}
+    relationships:
+      - {kind: dependency, target: ACT_SE}
+  - id: UC3
+    type: ProductUseCase
+    name: "Refactor a subsystem"
+    tags: {primary_actor: "Systems Engineer"}
+    relationships:
+      - {kind: dependency, target: ACT_SE}
+  - id: UC4
+    type: ProductUseCase
+    name: "Revert an AI edit"
+    tags: {primary_actor: "Systems Engineer"}
+    relationships:
+      - {kind: dependency, target: ACT_SE}
+  - id: UC5
+    type: ProductUseCase
+    name: "Administer roles and audit log"
+    tags: {primary_actor: "Administrator"}
+    relationships:
+      - {kind: dependency, target: ACT_ADMIN}
+
+  # ---------------- B3 — System Context ----------------
+  - id: ACT_SE
+    type: ExternalActor
+    name: "Systems Engineer"
+    tags: {actor_kind: human}
+  - id: ACT_ADMIN
+    type: ExternalActor
+    name: "Administrator"
+    tags: {actor_kind: human}
+  - id: ACT_CAMEO
+    type: ExternalActor
+    name: "Cameo Systems Modeler"
+    description: "The host application whose Open API the product drives."
+    tags: {actor_kind: external_system}
+
+  # ---------------- B4 — Measurements of Effectiveness ----------------
+  - id: MOE1
+    type: MeasurementOfEffectiveness
+    name: "Model edit round-trip time"
+    tags: {unit: "seconds", target_value: "< 5"}
+    relationships:
+      - {kind: dependency, target: N1}
+  - id: MOE2
+    type: MeasurementOfEffectiveness
+    name: "Undo success rate for AI edits"
+    tags: {unit: "percent", target_value: "100"}
+    relationships:
+      - {kind: dependency, target: N2}
+
+  # ---------------- W1 — System Requirements ----------------
+  - id: SR1
+    type: SystemRequirement
+    name: "Provide full CRUD, refactor, inspect and export on models"
+    tags: {rationale: "Core product function per locked decisions.", verification_method: demonstration}
+    relationships:
+      - {kind: derive_reqt, target: N1}
+  - id: SR2
+    type: SystemRequirement
+    name: "Perform every model write inside an undoable session"
+    tags: {rationale: "Undo requirement is non-negotiable; maps to Cameo session manager.", verification_method: test}
+    relationships:
+      - {kind: derive_reqt, target: N2}
+  - id: SR3
+    type: SystemRequirement
+    name: "Be fully self-hostable on-premises"
+    tags: {rationale: "No mandatory external SaaS; NIST SP 800-171-style controls.", verification_method: inspection}
+    relationships:
+      - {kind: derive_reqt, target: N3}
+  - id: SR4
+    type: SystemRequirement
+    name: "Abstract over SysML v1 and v2 API namespaces"
+    tags: {rationale: "Largest single cost driver; one adapter per namespace.", verification_method: test}
+    relationships:
+      - {kind: derive_reqt, target: N4}
+  - id: SR5
+    type: SystemRequirement
+    name: "Enforce role-based access control with audit logging"
+    tags: {rationale: "CUI-ceiling deployments require access control and audit.", verification_method: test}
+    relationships:
+      - {kind: derive_reqt, target: N3}
+  - id: SR6
+    type: SystemRequirement
+    name: "Offer both a GUI panel and a conversational AI mode"
+    tags: {rationale: "Two consumers over one service core.", verification_method: demonstration}
+    relationships:
+      - {kind: derive_reqt, target: N1}
+
+  # ---------------- W2 — Functional Analysis ----------------
+  - id: F1
+    type: SystemFunction
+    name: "Validate incoming change request"
+    tags: {trigger: "User submits an edit via GUI or chat"}
+    relationships:
+      - {kind: allocate, target: LS_CORE}
+  - id: F2
+    type: SystemFunction
+    name: "Execute model operation through API adapter"
+    relationships:
+      - {kind: allocate, target: LS_API}
+  - id: F3
+    type: SystemFunction
+    name: "Record operation in audit log"
+    relationships:
+      - {kind: allocate, target: LS_SEC}
+  - id: F4
+    type: SystemFunction
+    name: "Revert a committed operation on demand"
+    relationships:
+      - {kind: allocate, target: LS_CORE}
+
+  # ---------------- W3 — Logical Subsystems ----------------
+  - id: LS_SYS
+    type: LogicalSubsystem
+    name: "Model Manipulation System"
+    description: "Root logical system."
+    tags: {responsibility: "End-to-end model manipulation with undo, in-boundary."}
+    relationships:
+      - {kind: composition, target: LS_CORE}
+      - {kind: composition, target: LS_API}
+      - {kind: composition, target: LS_FRONT}
+      - {kind: composition, target: LS_SEC}
+      - {kind: satisfy, target: SR1}
+  - id: LS_CORE
+    type: LogicalSubsystem
+    name: "Model Operations Core"
+    tags: {responsibility: "Validated, sessionized model operations."}
+    relationships:
+      - {kind: satisfy, target: SR2}
+  - id: LS_API
+    type: LogicalSubsystem
+    name: "API Abstraction Layer"
+    tags: {responsibility: "Hide v1/v2 namespace differences."}
+    relationships:
+      - {kind: satisfy, target: SR4}
+  - id: LS_FRONT
+    type: LogicalSubsystem
+    name: "Front Ends"
+    tags: {responsibility: "GUI panel and conversational AI mode."}
+    relationships:
+      - {kind: satisfy, target: SR6}
+  - id: LS_SEC
+    type: LogicalSubsystem
+    name: "Security Services"
+    tags: {responsibility: "Role-based access control (RBAC), audit, boundary enforcement."}
+    relationships:
+      - {kind: satisfy, target: SR5}
+      - {kind: satisfy, target: SR3}
+
+  # ---------------- W4 — System Constraints ----------------
+  - id: SC1
+    type: SystemConstraint
+    name: "No CUI leaves the accredited boundary"
+    tags: {expression: "outbound_cui_bytes == 0"}
+    relationships:
+      - {kind: dependency, target: LS_SEC}
+  - id: SC2
+    type: SystemConstraint
+    name: "Every write is session-wrapped"
+    tags: {expression: "writes_outside_session == 0"}
+    relationships:
+      - {kind: dependency, target: LS_CORE}
+
+  # ---------------- S1 — Component Requirements ----------------
+  - id: CR1
+    type: ComponentRequirement
+    name: "Session wrapper exposes per-edit revert"
+    tags: {rationale: "Realizes SR2 at component level.", verification_method: test}
+    relationships:
+      - {kind: derive_reqt, target: SR2}
+  - id: CR2
+    type: ComponentRequirement
+    name: "Adapters present identical operation contracts"
+    tags: {rationale: "Realizes SR4; callers must not see namespace differences.", verification_method: test}
+    relationships:
+      - {kind: derive_reqt, target: SR4}
+
+  # ---------------- S2 — Component Behavior ----------------
+  - id: CB1
+    type: ComponentBehavior
+    name: "Execute undoable write"
+    tags: {idempotent: false}
+    relationships:
+      - {kind: allocate, target: C_CORE}
+  - id: SESSION_WRAP
+    type: UndoableSession
+    name: "Undoable Session Wrapper"
+    description: "Wrapper over Cameo's session manager; every model write goes through it."
+    tags: {revertible: true}
+    relationships:
+      - {kind: satisfy, target: CR1}
+
+  # ---------------- S3 — Component Structure ----------------
+  - id: C_CORE
+    type: ServiceComponent
+    name: "Model Operations Service"
+    tags: {deployment_unit: in_jvm_plugin, stateless: false}
+    relationships:
+      - {kind: satisfy, target: SR1}
+      - {kind: satisfy, target: CR1}
+  - id: C_ADAPT_V1
+    type: ApiAdapter
+    name: "SysML v1 Adapter"
+    tags: {sysml_target: v1_7, api_namespace: "com.nomagic.magicdraw.sysml.*"}
+    relationships:
+      - {kind: dependency, target: C_CORE}
+  - id: C_ADAPT_V2
+    type: ApiAdapter
+    name: "SysML v2 Adapter"
+    tags: {sysml_target: v2, api_namespace: "com.dassault_systemes.modeler.sysml.*"}
+    relationships:
+      - {kind: dependency, target: C_CORE}
+  - id: C_PANEL
+    type: UiPanel
+    name: "Model Builder Panel"
+    tags: {surface: dockable_panel}
+    relationships:
+      - {kind: dependency, target: C_CORE}
+  - id: C_AGENT
+    type: AiAgent
+    name: "Conversational Agent"
+    tags: {inference_location: pluggable_external}
+    relationships:
+      - {kind: dependency, target: C_CORE}
+  - id: C_BOUNDARY
+    type: SecurityBoundary
+    name: "Accredited Deployment Boundary"
+    tags: {residency: on_prem_selfhost, controls: "NIST SP 800-171"}
+    relationships:
+      - {kind: satisfy, target: SR3}
+
+  # ---------------- S4 — Component Parameters ----------------
+  - id: CC1
+    type: ComponentConstraint
+    name: "Operation latency budget"
+    tags: {expression: "op_latency_s <= 5"}
+    relationships:
+      - {kind: dependency, target: C_CORE}

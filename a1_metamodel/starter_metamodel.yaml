@@ -1,0 +1,152 @@
+# =============================================================================
+# starter_metamodel.yaml  —  Canonical Metamodel (A1) SEED
+# =============================================================================
+# WHAT THIS IS
+#   A1 is the SINGLE SOURCE OF TRUTH for the model-as-code pipeline.
+#   Both the Cameo Profile (A2) and the JSON Schema (A3) are DERIVED from this
+#   file. Never hand-edit A2 or A3 independently — regenerate them from A1.
+#
+# HOW TO USE IT
+#   Fable: extend this seed into the full metamodel for the product. It is
+#   deliberately small and illustrative. The domain types below are examples
+#   sized to the product described in Project_Context_and_Decisions.md; replace
+#   / expand them once PRODUCT_FUNCTION detail is confirmed.
+#
+# VERIFY BEFORE TRUSTING
+#   The `magicgrid_cells` block encodes the MagicGrid *1st-edition* layout to the
+#   best available public understanding (column order: Requirements, Behavior,
+#   Structure, Parametrics). Cell IDs / package numbering MUST be verified against
+#   the 1st-edition template in the user's installed Cameo 2026x before any model
+#   is populated (this is a Phase-0/Phase-1 checkpoint). Treat mismatches as a
+#   blocker, not a rounding error.
+# =============================================================================
+
+metamodel:
+  name: "ProductArchitectureMetamodel"
+  version: "0.1.0-seed"
+  sysml_version: "1.7"                 # Aspect 2 targets v1.7 → v1 API namespace
+  magicgrid_edition: "1st"            # pin; verify package numbering in-tool
+  api_namespace: "com.nomagic.magicdraw.sysml.*"   # v1; do NOT use the v2 package
+
+# -----------------------------------------------------------------------------
+# MagicGrid 1st-edition cell taxonomy (VERIFY against installed template)
+# Each cell = a view = one or more presentation artifacts. Domain types below
+# declare which cell they belong to via `magicgrid_cell`.
+# -----------------------------------------------------------------------------
+magicgrid_cells:
+  # Problem domain — Black box (system seen from outside)
+  - {id: B1, domain: problem_blackbox, pillar: requirements, name: "Stakeholder Needs"}
+  - {id: B2, domain: problem_blackbox, pillar: behavior,     name: "Use Cases"}
+  - {id: B3, domain: problem_blackbox, pillar: structure,    name: "System Context"}
+  - {id: B4, domain: problem_blackbox, pillar: parametrics,  name: "Measurements of Effectiveness"}
+  # Problem domain — White box (system seen from inside)
+  - {id: W1, domain: problem_whitebox, pillar: requirements, name: "System Requirements"}
+  - {id: W2, domain: problem_whitebox, pillar: behavior,     name: "Functional Analysis"}
+  - {id: W3, domain: problem_whitebox, pillar: structure,    name: "Logical Subsystem Communication"}
+  - {id: W4, domain: problem_whitebox, pillar: parametrics,  name: "System Constraints"}
+  # Solution domain — component level
+  - {id: S1, domain: solution, pillar: requirements, name: "Component Requirements"}
+  - {id: S2, domain: solution, pillar: behavior,     name: "Component Behavior"}
+  - {id: S3, domain: solution, pillar: structure,    name: "Component Structure"}
+  - {id: S4, domain: solution, pillar: parametrics,  name: "Component Parameters"}
+
+# -----------------------------------------------------------------------------
+# Allowed relationship kinds (SysML 1.7). Types reference these by `kind`.
+# -----------------------------------------------------------------------------
+relationship_kinds:
+  - {kind: composition,     note: "part-of; owned part property"}
+  - {kind: reference,       note: "referenced (non-owning) part"}
+  - {kind: generalization,  note: "is-a / specialization"}
+  - {kind: satisfy,         note: "block satisfies a requirement"}
+  - {kind: allocate,        note: "behavior/element allocated to structure"}
+  - {kind: derive_reqt,     note: "requirement derived from requirement"}
+  - {kind: dependency,      note: "generic dependency"}
+
+# -----------------------------------------------------------------------------
+# Domain types (custom stereotypes). EACH becomes a stereotype in the Profile
+# (A2) and a validated object shape in the schema (A3).
+#   extends            : SysML base metaclass/stereotype the stereotype extends
+#   magicgrid_cell     : where instances live in the grid (drives package placement)
+#   tagged_values      : name -> type (string|int|bool|enum[...]|ref)
+#   allowed_relationships : {kind, target-type, multiplicity}
+# These examples are illustrative of the product; expand per PRODUCT_FUNCTION.
+# -----------------------------------------------------------------------------
+types:
+
+  - name: ServiceComponent
+    extends: Block
+    magicgrid_cell: S3
+    description: "A deployable service in the product's core (e.g., the model-operations service)."
+    tagged_values:
+      deployment_unit: "enum[in_jvm_plugin, sidecar_container, external_service]"
+      stateless: "bool"
+    allowed_relationships:
+      - {kind: composition, target: ServiceComponent, multiplicity: "0..*"}
+      - {kind: satisfy,     target: SystemRequirement, multiplicity: "0..*"}
+
+  - name: ApiAdapter
+    extends: Block
+    magicgrid_cell: S3
+    description: "Abstraction seam over the SysML v1 vs v2 Open API namespaces. One adapter per target API version."
+    tagged_values:
+      sysml_target: "enum[v1_7, v2]"
+      api_namespace: "string"
+    allowed_relationships:
+      - {kind: dependency, target: ServiceComponent, multiplicity: "1..*"}
+
+  - name: UiPanel
+    extends: Block
+    magicgrid_cell: S3
+    description: "In-Cameo graphical panel (build views, find elements)."
+    tagged_values:
+      surface: "enum[dockable_panel, dialog, browser_context_menu]"
+    allowed_relationships:
+      - {kind: dependency, target: ServiceComponent, multiplicity: "1..*"}
+
+  - name: AiAgent
+    extends: Block
+    magicgrid_cell: S3
+    description: "Conversational mode. Inference is pluggable/in-boundary (see security decisions)."
+    tagged_values:
+      inference_location: "enum[in_boundary_selfhosted, pluggable_external, disabled]"
+    allowed_relationships:
+      - {kind: dependency, target: ServiceComponent, multiplicity: "1..*"}
+
+  - name: UndoableSession
+    extends: Block
+    magicgrid_cell: S2
+    description: "Wrapper over Cameo's session manager; every model write is an undoable session."
+    tagged_values:
+      revertible: "bool"
+
+  - name: SecurityBoundary
+    extends: Block
+    magicgrid_cell: S3
+    description: "Accredited boundary within which CUI stays (self-hostable on-prem)."
+    tagged_values:
+      residency: "enum[on_prem_selfhost]"
+      controls: "string"   # e.g. NIST SP 800-171 control references
+
+  - name: SystemRequirement
+    extends: Requirement
+    magicgrid_cell: W1
+    description: "A system-level requirement on the product."
+    tagged_values:
+      rationale: "string"
+      verification_method: "enum[test, analysis, inspection, demonstration]"
+
+  - name: ProductUseCase
+    extends: UseCase
+    magicgrid_cell: B2
+    description: "A black-box use case (e.g., 'Refactor a subsystem', 'Ask what an element is')."
+    tagged_values:
+      primary_actor: "string"
+
+# -----------------------------------------------------------------------------
+# Validation policy the generator enforces (surfaced in both A3 and Cameo checks)
+# -----------------------------------------------------------------------------
+validation:
+  reject_unknown_types: true            # any type not declared above is an error
+  require_magicgrid_cell: true          # every instance must place into a cell
+  enforce_relationship_targets: true    # relationship targets must be allowed types
+  fail_on_v2_namespace: true            # Aspect 2 is v1.7 only

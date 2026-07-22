@@ -1,0 +1,9 @@
+# NEGATIVE TEST: a ServiceComponent may not 'satisfy' a UiPanel — must be REJECTED.
+spec: {name: "neg bad target type", metamodel_version: "0.2.0"}
+elements:
+  - id: X1
+    type: ServiceComponent
+    name: "Service"
+    relationships:
+      - {kind: satisfy, target: X2}
+  - {id: X2, type: UiPanel, name: "Panel"}

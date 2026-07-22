@@ -1,0 +1,7 @@
+# NEGATIVE TEST: 'priority' is not a declared tag of ServiceComponent — must be REJECTED.
+spec: {name: "neg foreign tag", metamodel_version: "0.2.0"}
+elements:
+  - id: X1
+    type: ServiceComponent
+    name: "Service with a foreign tag"
+    tags: {priority: must}

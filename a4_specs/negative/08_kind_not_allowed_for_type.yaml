@@ -1,0 +1,9 @@
+# NEGATIVE TEST: 'allocate' is a real kind but not allowed on ServiceComponent — must be REJECTED.
+spec: {name: "neg kind not allowed", metamodel_version: "0.2.0"}
+elements:
+  - id: X1
+    type: ServiceComponent
+    name: "Service"
+    relationships:
+      - {kind: allocate, target: X2}
+  - {id: X2, type: ServiceComponent, name: "Other service"}

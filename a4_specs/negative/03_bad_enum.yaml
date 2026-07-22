@@ -1,0 +1,7 @@
+# NEGATIVE TEST: deployment_unit 'floppy_disk' is not in the enum — must be REJECTED.
+spec: {name: "neg bad enum", metamodel_version: "0.2.0"}
+elements:
+  - id: X1
+    type: ServiceComponent
+    name: "Bad enum value"
+    tags: {deployment_unit: floppy_disk}

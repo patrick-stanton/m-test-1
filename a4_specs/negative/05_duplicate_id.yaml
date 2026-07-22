@@ -1,0 +1,5 @@
+# NEGATIVE TEST: duplicate element id — must be REJECTED.
+spec: {name: "neg duplicate id", metamodel_version: "0.2.0"}
+elements:
+  - {id: X1, type: ServiceComponent, name: "First"}
+  - {id: X1, type: ServiceComponent, name: "Second"}

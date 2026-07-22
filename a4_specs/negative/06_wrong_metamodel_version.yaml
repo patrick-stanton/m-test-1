@@ -1,0 +1,4 @@
+# NEGATIVE TEST: spec pinned to a different metamodel version — must be REJECTED.
+spec: {name: "neg wrong version", metamodel_version: "9.9.9"}
+elements:
+  - {id: X1, type: ServiceComponent, name: "Service"}

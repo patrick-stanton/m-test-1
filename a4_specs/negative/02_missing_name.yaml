@@ -1,0 +1,4 @@
+# NEGATIVE TEST: 'name' is required on every element — must be REJECTED.
+spec: {name: "neg missing name", metamodel_version: "0.2.0"}
+elements:
+  - {id: X1, type: ServiceComponent}
