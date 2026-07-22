@@ -1,0 +1,10 @@
+# Generated pipeline output (build_plan.json is produced per run — see README)
+build/
+
+# Python bytecode caches
+__pycache__/
+*.pyc
+
+# Cameo-machine report files, if ever archived locally
+*_report.txt
+phase0_headless_log.txt
